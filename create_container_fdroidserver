@@ -1,0 +1,32 @@
+#!/bin/sh
+# https://f-droid.org/en/docs/Setup_an_F-Droid_App_Repo/
+echo "Name of container: "
+read CONTAINER
+lxc-create -n $CONTAINER -t debian -- -r stretch --packages nano,screen,iputils-ping,less,dnsutils,bind9-host,wget,nginx,openssh-server,ssl-cert
+cp -v fdroidserver_nginx_default /var/lib/lxc/$CONTAINER/rootfs/root/default # originally placed in tmp, but this fails as that directory will be cleaned some time later
+cd /var/lib/lxc
+chroot $CONTAINER/rootfs/ apt update
+chroot $CONTAINER/rootfs/ apt -y full-upgrade
+mv -v $CONTAINER/rootfs/etc/ssh/sshd_config $CONTAINER/rootfs/etc/ssh/sshd_config.org
+cat $CONTAINER/rootfs/etc/ssh/sshd_config.org | sed "s/#PermitRootLogin prohibit-password/PermitRootLogin Yes/g" > $CONTAINER/rootfs/etc/ssh/sshd_config
+echo "Please enter root password for container"
+chroot $CONTAINER/rootfs/ passwd
+echo "Starting $CONTAINER"
+lxc-start -d -n $CONTAINER
+echo "Waiting some time for container to boot..."
+sleep 10 # This could be improved. May be check for DHCP lease file or check if "ifconfig eth0" reports something meaningful?
+echo "Installing fdroidserver"
+lxc-attach -n $CONTAINER -- apt -y install fdroidserver
+echo "Preparing"
+rm -v $CONTAINER/rootfs/etc/nginx/sites-available/default
+mv -v $CONTAINER/rootfs/root/default $CONTAINER/rootfs/etc/nginx/sites-available/
+mkdir -pv $CONTAINER/rootfs/var/www/fdroidserver/fdroid
+mkdir -pv $CONTAINER/rootfs/var/www/fdroidserver/apk
+echo "cd /var/www/fdroidserver/fdroid && fdroid init" > $CONTAINER/rootfs/tmp/fdroid_init
+lxc-attach -n $CONTAINER -- bash /tmp/fdroid_init
+echo "Starting nginx"
+lxc-attach -n $CONTAINER -- systemctl restart nginx
+lxc-attach -n $CONTAINER -- systemctl restart ssh
+lxc-attach -n $CONTAINER -- netstat -tpln # check if everything is up
+# CONTAINERIP=$(lxc-ls -f | grep $CONTAINER | cut -d' ' -f21)
+echo "Finished. Now go to https://$CONTAINER/fdroid/ and see if everything is working."
