@@ -1,2 +1,8 @@
-#!/bin/sh
-lxc-stop -n $1 && lxc-start -n $1 -d
+#!/bin/bash
+lxc-stop -n $1;
+lxc-start -n $1 -d;
+STARTED=0;
+while [ "$STARTED" == "0" ]; do
+  STARTED=$(lxc-info -n $1 -i | wc -l);
+done;
+lxc-attach -n $1 -- systemctl isolate multi-user.target
