@@ -1,0 +1,32 @@
+#!/bin/sh
+echo "Name of container: "
+read CONTAINER
+echo "Name of destination directory for mediawiki: "
+read MWDIR
+cd /var/lib/lxc
+lxc-create -n $CONTAINER -t debian -- -r stretch --packages nano,screen,iputils-ping,less,apache2,dnsutils,bind9-host,imagemagick,wget,php7.0,libapache2-mod-php7.0,php-mbstring,php-xml,mysql-server,php7.0-mysql
+chroot $CONTAINER/rootfs/ apt update
+chroot $CONTAINER/rootfs/ apt -y full-upgrade
+mv -v $CONTAINER/rootfs/etc/ssh/sshd_config $CONTAINER/rootfs/etc/ssh/sshd_config.org
+cat $CONTAINER/rootfs/etc/ssh/sshd_config.org | sed "s/#PermitRootLogin prohibit-password/PermitRootLogin Yes/g" | $CONTAINER/rootfs/etc/ssh/sshd_config
+echo "Please enter root password for container"
+chroot $CONTAINER/rootfs/ passwd
+echo "Starting $CONTAINER"
+lxc-start -d -n $CONTAINER
+echo "Preparing MySQL database"
+lxc-attach -n $CONTAINER -- mysql_secure_installation
+echo "Allowing root login to MySql"
+lxc-attach -n $CONTAINER -- mysql -u root -e "update mysql.user set plugin='', host='%' where user='root'; flush privileges;"
+cp -v /root/Downloads/mediawiki-1.30.0.tar.gz $CONTAINER/rootfs/var/www/html/
+cd $CONTAINER/rootfs/var/www/html/
+tar xzf mediawiki-*.tar.gz
+mv -v mediawiki-1.30.0/ $MWDIR/
+rm -v mediawiki-*.tar.gz
+lxc-attach -n $CONTAINER -- chown -R www-data:www-data /var/www/html/$MWDIR/
+CONTAINERIP=$(lxc-ls -f | grep $CONTAINER | cut -d' ' -f21)
+echo "Go to http://$CONTAINERIP/$MWDIR/ and install Mediawiki, download LocalSettings.php,"
+echo "open it in an editor, copy all the content to the clipboard and then press enter."
+read FOO
+echo "nano will open - press Ctrl+Shift+V there to insert the previously copied file."
+lxc-attach -n $CONTAINER -- nano /var/www/html/$MWDIR/LocalSettings.php
+echo "Your mediawiki installation should now be ready."
