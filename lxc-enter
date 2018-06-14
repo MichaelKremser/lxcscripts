@@ -1,0 +1,4 @@
+#!/bin/bash
+echo Entering $1...
+lxc-attach -n $1 -- bash
+echo Welcome back on $(hostname)!
