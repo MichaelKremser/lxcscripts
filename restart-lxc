@@ -1,8 +1,16 @@
-#!/bin/bash
+#!/bin/sh
+echo "Stopping $1";
 lxc-stop -n $1;
-lxc-start -n $1 -d;
-STARTED=0;
-while [ "$STARTED" == "0" ]; do
-  STARTED=$(lxc-info -n $1 -i | wc -l);
-done;
-lxc-attach -n $1 -- systemctl isolate multi-user.target
+echo "Starting $1";
+lxc-start -d -n $1;
+echo "Checking $1";
+DHCPCPID=0;
+while [ $DHCPCPID -lt 1 ]; do
+	DHCPCPID=$(lxc-attach -n $1 -- cat /run/dhclient.eth0.pid 2>/dev/null);
+	if [ "$DHCPCPID" = "" ]; then
+		DHCPCPID=0;
+	fi
+	echo $DHCPCPID;
+	sleep 0.1;
+done
+echo "$1 finished booting"
