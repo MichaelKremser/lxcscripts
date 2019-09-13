@@ -8,7 +8,7 @@ lxc-create -n $CONTAINER -t debian -- -r stretch --packages nano,screen,iputils-
 chroot $CONTAINER/rootfs/ apt update
 chroot $CONTAINER/rootfs/ apt -y full-upgrade
 mv -v $CONTAINER/rootfs/etc/ssh/sshd_config $CONTAINER/rootfs/etc/ssh/sshd_config.org
-cat $CONTAINER/rootfs/etc/ssh/sshd_config.org | sed "s/#PermitRootLogin prohibit-password/PermitRootLogin Yes/g" | $CONTAINER/rootfs/etc/ssh/sshd_config
+cat $CONTAINER/rootfs/etc/ssh/sshd_config.org | sed "s/#PermitRootLogin prohibit-password/PermitRootLogin Yes/g" > $CONTAINER/rootfs/etc/ssh/sshd_config
 echo "Please enter root password for container"
 chroot $CONTAINER/rootfs/ passwd
 echo "Starting $CONTAINER"
