@@ -1,0 +1,7 @@
+net.ipv6.conf.enp2s0.accept_ra=2 # otherwise kernel won't process SLAAC necessary for the interface that has IPv6 connectivity
+
+
+brctl addbr vmnet
+ifconfig vmnet up
+ip a a 192.168.16.1/24 dev vmnet
+ip a a 2001:470:7522:10::/64 dev vmnet
