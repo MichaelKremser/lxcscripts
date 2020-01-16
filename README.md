@@ -17,3 +17,7 @@ Scripts to automatically create containers with (almost) ready-to-use software.
 ### fdroidserver
 
 Container featuring fdroidserver and nginx. nginx is configured to use self-signed certificates for SSL. In production use, those should be replaced by certificates accepted by clients.
+
+## vmnet
+
+Creates a bridge with the name "vmnet" that can be used if lxcbr0 cannot be used or has issues.
