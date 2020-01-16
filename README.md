@@ -1,6 +1,6 @@
 # lxcscripts
 
-This repository contains various scripts related to LXC.
+This repository contains various scripts and files related to LXC.
 
 ## list-lxc
 
@@ -8,7 +8,7 @@ Simply calls "lxc-ls" with some commonly used parameters.
 
 ## restart-lxc
 
-Restarts a container, in fact just calls lxc-stop and lxc-start.
+Restarts a container by calling lxc-stop and lxc-start and waits for the file "/run/dhclient.eth0.pid" to be created.
 
 ## create_container_*
 
