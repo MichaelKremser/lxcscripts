@@ -1,4 +1,4 @@
-net.ipv6.conf.enp2s0.accept_ra=2 # otherwise kernel won't process SLAAC necessary for the interface that has IPv6 connectivity
+sysctl -w net.ipv6.conf.enp2s0.accept_ra=2 # otherwise kernel won't process SLAAC necessary for the interface that has IPv6 connectivity
 
 
 brctl addbr vmnet
